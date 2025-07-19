@@ -1,0 +1,487 @@
+#include <iostream>
+#include <string>
+#include <iomanip>
+#include <cctype>
+#include <vector >
+#include <fstream>
+using namespace std;
+enum enchoce  {show =1, add=2 , deletee = 3 ,update =4 , find =5 , exitt  =6  };
+string filename = "clientdata.txt";
+string readnsame()
+{
+	cout << "please enter the name \n"; 
+	string x; 
+	getline(cin, x); 
+	return x;
+
+}
+struct stclientinfo {
+	string accountnumber;
+string  pincode;
+	string name;
+	string phonenumber;
+	double accountbalance;
+	bool todelete = false;
+	bool edit = false; 
+};   
+bool printclientdatafromaccountnum(string, string, stclientinfo&);
+stclientinfo readdataofclient()
+{
+	stclientinfo clientinfo;
+	cout << "please enter client data :\n\n"; 
+	cout << "enter account number ?"; 
+	getline(cin>>ws, clientinfo.accountnumber); 
+	while (printclientdatafromaccountnum(filename, clientinfo.accountnumber, clientinfo))
+	{cout <<"account number already exists , please enter another account number \n";
+	getline(cin, clientinfo.accountnumber);
+	}
+	cout << "enter pin code ?";
+	getline(cin, clientinfo.pincode);
+	cout << "enter name ?";
+	getline(cin, clientinfo.name);
+	cout << "enter phone ?";
+	getline(cin,clientinfo.phonenumber);
+	cout << "enter account balance ?";
+	cin >> clientinfo.accountbalance;  
+	return clientinfo;
+}
+string changeinfotoline(stclientinfo clientinfo,string seperator="//")
+{
+	string word = clientinfo.accountnumber + seperator;
+	word+=clientinfo.pincode + seperator;
+	word += clientinfo.name + seperator;
+	word += clientinfo.phonenumber + seperator;
+	word += to_string(clientinfo.accountbalance);
+	return word;
+}
+vector <string> splitstring(string x, string seperator)
+{
+	vector <string >cx;
+	string sword = "";
+	short pos = 0; 
+	while (x.find(seperator) != std::string::npos)
+	{
+		pos = x.find(seperator);
+		sword = x.substr(0, pos); 
+		if (sword != " ")
+			cx.push_back(sword); 
+		if (sword != " ")
+			x.erase(0, pos + seperator.length()); 
+	}
+	if (x != "")
+		cx.push_back(x); 
+	return cx; 
+}
+/*stclientinfo changelinetorecord(string line, string seperator = "//")
+{
+	stclientinfo clientinfo; 
+	clientinfo.accountnumber = line.substr(0, line.find(seperator) );
+	line.erase(0, line.find(seperator) + seperator.length()); 
+	clientinfo.pincode = line.substr(0, line.find(seperator));
+	line.erase(0, line.find(seperator) + seperator.length());
+	clientinfo.name = line.substr(0, line.find(seperator));
+	line.erase(0, line.find(seperator) + seperator.length());
+	clientinfo.phonenumber = line.substr(0, line.find(seperator));
+	line.erase(0, line.find(seperator) + seperator.length());
+	clientinfo.accountbalance = stod(line.substr(0, line.find(seperator)));
+	line.erase(0, line.find(seperator) + seperator.length());
+	return clientinfo; 
+}*/
+stclientinfo changelinetorecord(string line, string seperator = "//")
+{
+	stclientinfo clientinfo;
+	vector <string >vec; 
+	vec = splitstring(line, seperator);
+	clientinfo.accountnumber = vec[0];
+	
+		clientinfo.pincode = vec[1];
+
+		clientinfo.name = vec[2];
+
+		clientinfo.phonenumber = vec[3];
+	
+	
+	clientinfo.accountbalance = stod(vec[4]);
+	
+	return clientinfo;
+}
+void printrecord(stclientinfo clientinfo)
+{
+	cout <<"account number  " << ": " << clientinfo.accountnumber<<endl; 
+	cout <<"pin code        " << ": " << clientinfo.pincode << endl;
+	cout <<"name            " << ": " << clientinfo.name << endl;
+	cout <<"phone           " << ": " << clientinfo.phonenumber << endl;
+	printf("account balance : %.5f\n", clientinfo.accountbalance);
+
+
+
+
+}
+void addclienttofile(string filename,string  line)
+{
+	fstream myfile; 
+	myfile.open(filename, ios::out | ios::app);
+	if (myfile.is_open())
+	{
+		myfile << line << endl;
+	}
+
+}
+void addnewclient()
+{
+	stclientinfo clientinfo;
+		clientinfo = readdataofclient();
+	 
+		 addclienttofile("clientdata.txt", changeinfotoline(clientinfo, "#//#"));
+		
+
+}
+void addnewclients()
+
+{
+	char ans = 'y';
+	do 
+	{
+		 
+		cout << "add new client \n\n"; 
+		addnewclient(); 
+		cout << "\n\nadded successfully ,do you want to add more ";
+		cin >> ans;
+	
+	} while (ans == 'y' || ans == 'Y'); 
+
+
+}
+vector <stclientinfo>datainfiletovector(string filename)
+{
+	vector <stclientinfo> vec;
+	fstream myfile; 
+	stclientinfo clientinfo; 
+	myfile.open(filename, ios::in); 
+	if (myfile.is_open())
+	{
+		string line; 
+		while (getline(myfile, line))
+		{
+			clientinfo = changelinetorecord(line, "#//#");
+			vec.push_back(clientinfo); 
+			
+		}
+		myfile.close();
+	}
+	return vec; 
+}
+void head(vector <stclientinfo > c)
+{
+	cout << "                                  client list (" << c.size() << ") cilent(s)\n";
+	cout << "_________________________________________________________________________________________________\n\n";
+	cout << "| Account Number      | pin code       | client name                     | phone          | balance \n";
+	cout << "_________________________________________________________________________________________________\n\n";
+}
+void printclientdatafrostruc(stclientinfo clientinfo)
+{
+	cout << "| " << left << setw(20) << clientinfo.accountnumber;
+	cout << "| " << left << setw(15) << clientinfo.pincode << "| ";
+	cout << left << setw(32) << clientinfo.name << "| ";
+	cout << left << setw(15) << clientinfo.phonenumber << "| ";
+	cout << left << setw(7) << clientinfo.accountbalance;
+	cout << endl;
+}
+void printdata(vector<stclientinfo> data)
+{
+	
+	for (stclientinfo& c : data)
+	{
+		printclientdatafrostruc(c);
+               		
+	}
+}
+void printclientdata()
+{
+	vector <stclientinfo> data;
+	data = datainfiletovector("clientdata.txt");
+	head(data);
+	printdata(data); 
+
+
+
+}
+bool printclientdatafromaccountnum(string filename,string accountnumber, stclientinfo & clientinfoo )
+{
+	vector <stclientinfo> vec;
+	vec = datainfiletovector(filename);
+	stclientinfo clientinfo;
+	for (stclientinfo& c : vec)
+	{
+		
+		if (c.accountnumber == accountnumber)
+		{
+			clientinfoo = c; 
+			return 1;
+		}
+
+
+
+
+	}
+
+	return 0; 
+
+}
+string getaccountnumber()
+{
+	string x; 
+	cout << "pleasse enter account number \n";
+	cin >> x;
+	return x; 
+}
+void searchaboutclient(string filename)
+{
+	string accountnumber = getaccountnumber();
+	stclientinfo clientinfo; 
+	if (printclientdatafromaccountnum(filename,accountnumber, clientinfo))
+	{
+		printrecord(clientinfo);
+	}
+	else
+	{
+		cout << "the account number (" << accountnumber << ")didn,t found \n"; 
+	}
+			 
+} 
+
+char ans()
+{
+	cout << "do you want to delete the account (yes)y or no (n)\n"; 
+	char x;
+	cin >> x; 
+	return tolower(x); 
+}
+bool marktodelete(string accountnumber, vector <stclientinfo>& vclient)
+{
+	for (stclientinfo& c : vclient)
+	{
+		if (c.accountnumber == accountnumber)
+		{
+			c.todelete = true; 
+			return 1; 
+		}
+	}
+	return 0; 
+}
+void putvecinfiletodelete(string filename, vector <stclientinfo>vclient)
+{
+	fstream myfile; 
+	myfile.open(filename, ios::out); 
+	if (myfile.is_open())
+	{
+		for (stclientinfo& c : vclient)
+		{
+			if (c.todelete == false)
+				myfile << changeinfotoline(c,"#//#")<<endl ;
+		}
+		myfile.close(); 
+	}
+
+}
+void deleteaccount(string accountnumber , vector <stclientinfo> &vclient )
+{
+	
+	stclientinfo clientinfo;
+	if (printclientdatafromaccountnum(filename,accountnumber, clientinfo))
+	{
+		printrecord(clientinfo);
+		if (ans() == 'y')
+		{
+			marktodelete(accountnumber,vclient);
+			putvecinfiletodelete(filename, vclient);
+			vclient = datainfiletovector(filename); 
+		
+		}
+
+	}
+	else
+	{
+		cout << "the account number (" << accountnumber << ")didn,t found \n";
+	}
+
+}
+bool marktheaccounttoedit(string accountnumber, vector <stclientinfo>& v)
+{
+	for (stclientinfo& c : v)
+	{
+		if (c.accountnumber == accountnumber)
+		{
+			c.edit = true; 
+			return 1;
+		}
+	}
+	return 0; 
+}
+
+
+stclientinfo getnewdata(string accountnumber )
+{
+	stclientinfo clientinfo;
+	clientinfo.accountnumber = accountnumber;
+	cout << "please enter client data :\n\n";
+	
+	cout << "enter pin code ?";
+	getline(cin>>ws, clientinfo.pincode);
+	cout << "enter name ?";
+	getline(cin, clientinfo.name);
+	cout << "enter phone ?";
+	getline(cin, clientinfo.phonenumber);
+	cout << "enter account balance ?";
+	cin >> clientinfo.accountbalance;
+	return clientinfo;
+	
+}
+
+void editaccount(string accountnumber, vector <stclientinfo>& vclient)
+{
+	stclientinfo clientinfo;
+	
+	if (printclientdatafromaccountnum(filename, accountnumber, clientinfo))
+	{
+		printrecord(clientinfo);
+		cout << "do you want to edit the account (yes)y or no (n)\n";
+		char x; 
+		cin >> x;
+		if (x == 'y' || x == 'Y')
+
+		{
+			for (stclientinfo& c : vclient)
+			{
+				if (c.accountnumber == accountnumber)
+				{
+					c = getnewdata(accountnumber);
+					break;
+				}
+			}
+		
+			putvecinfiletodelete(filename, vclient);
+			cout << "\n\nthe account edited suuccessfully \n";
+		}
+	}
+	else
+	{
+		cout << "the account number (" << accountnumber << ")didn,t found \n";
+	}
+}
+string readstring (string x)
+{
+	cout << x << endl;
+	string name; 
+	getline(cin>>ws, name); 
+	return name; 
+
+}
+void headoftaple(string title)
+{
+	cout << "________________________________________________\n";
+	cout << "________________________________________________\n\n";
+	cout << "              " << title << "\n";
+	cout << "________________________________________________\n";
+	cout << "________________________________________________\n\n";
+}
+void homescreen()
+{
+	cout << '\t' << "[ 1 ] Show Client List. \n";
+	cout << '\t' << "[ 2 ] Add New Client.  \n";
+	cout << '\t' << "[ 3 ] Delete Client . \n";
+	cout << '\t' << "[ 4 ] Update Client Info. \n";
+	cout << '\t' << "[ 5 ] Find Client. \n";
+	cout << '\t' << "[ 6 ] Exit. \n";
+	cout << "________________________________________________\n";
+	cout << "________________________________________________\n\n";
+
+
+
+
+
+}
+enchoce answerofuser()
+{
+	short x;
+	do {
+		cout << "Choose what do you want to do [ 1 to 6 ]?";
+		
+		cin >> x; 
+		while (cin.fail())
+		{
+			cin.clear(); 
+			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			cout << "invalid number please enter a valid one \n"; 
+			cin >> x; 
+		}
+	} while (x <1 ||x>6 );
+	return (enchoce) x ;                                                                                    
+}
+void makethefunctionofuser(enchoce choce)
+{
+	vector <stclientinfo>vclient; 
+	vclient = datainfiletovector(filename); 
+
+	switch (choce)
+	{
+	case enchoce::show:
+		system("cls"); 
+		headoftaple("Show data of client screen");
+		printclientdata();
+		system("pause>0");
+		break; 
+	case enchoce::add : 
+		system("cls");
+		headoftaple("Add new client screen");
+		addnewclients(); 
+		system("pause>0");
+		break; 
+	case enchoce ::deletee: 
+		system("cls");
+		headoftaple("delete client screen");
+		deleteaccount(readstring("Enter the account number ?"), vclient); 
+		system("pause>0");
+		break; 
+	case enchoce::update : 
+		system("cls");
+		headoftaple("Update client screen");
+		editaccount(readstring("Enter the account number ?"), vclient); 
+		system("pause>0");
+		break; 
+	case enchoce::find:
+		system("cls");
+		headoftaple("search screen");
+		searchaboutclient("clientdata.txt");
+		system("pause>0");
+		break; 
+	case enchoce::exitt:
+		system("cls");
+		cout << "\n\n\n\n\n\n\n\n\n\n\n";
+		headoftaple("the program was end :-) ");
+	}
+}
+void bank()
+{
+	enchoce chose;
+	do
+	{
+		system("cls"); 
+		headoftaple("Main Menu Screen "); 
+		homescreen(); 
+		chose = answerofuser(); 
+		
+		makethefunctionofuser(chose);
+		cout << "\n\ncout if you want to go back to home screen press on any key "; 
+		
+	} while (chose != enchoce::exitt);
+
+
+
+}
+int  main()       
+{bank ();
+	
+ return 0;
+  }                         
+	                               
