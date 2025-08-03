@@ -1,0 +1,1277 @@
+#include <iostream>
+#include <string>
+#include <iomanip>
+#include <cctype>
+#include <vector >
+#include <fstream>
+using namespace std;
+short showw = 1; 
+short addd = 2; 
+short deleteee = 4; 
+short updradeee = 8; 
+short findd = 16;
+short transac = 32; 
+short mangee = 64; 
+enum enchoce { show = 1, add = 2, deletee = 3, update = 4, find = 5, trans = 6,mange =7 , logout =8 };
+enum entrans { deposit = 1, withdraw = 2, totalbalance = 3, manin = 4 };
+enum enmange {list=1, adduser=2, deleteuser=3, updateuser =4 , finduser = 5,mainn =6 };
+string filename = "clientdata.txt";
+string userfile = "usersdata.txt"; 
+string readnsame()
+{
+	cout << "please enter the name \n";
+	string x;
+	getline(cin, x);
+	return x;
+
+}
+struct stclientinfo {
+	string accountnumber;
+	string  pincode;
+	string name;
+	string phonenumber;
+	double accountbalance;
+	bool todelete = false;
+	bool edit = false;
+	
+};
+struct stuser {
+	string name; 
+	string password; 
+	short permission = 0; 
+	bool deletee = false; 
+	 
+
+};
+bool printclientdatafromaccountnum(string, string, stclientinfo&);
+stclientinfo readdataofclient()
+{
+	stclientinfo clientinfo;
+	cout << "please enter client data :\n\n";
+	cout << "enter account number ?";
+	getline(cin >> ws, clientinfo.accountnumber);
+	while (printclientdatafromaccountnum(filename, clientinfo.accountnumber, clientinfo))
+	{
+		cout << "account number already exists , please enter another account number \n";
+		getline(cin, clientinfo.accountnumber);
+	}
+	cout << "enter pin code ?";
+	getline(cin, clientinfo.pincode);
+	cout << "enter name ?";
+	getline(cin, clientinfo.name);
+	cout << "enter phone ?";
+	getline(cin, clientinfo.phonenumber);
+	cout << "enter account balance ?";
+	cin >> clientinfo.accountbalance;
+	return clientinfo;
+}
+string changeinfotoline(stclientinfo clientinfo, string seperator = "//")
+{
+	string word = clientinfo.accountnumber + seperator;
+	word += clientinfo.pincode + seperator;
+	word += clientinfo.name + seperator;
+	word += clientinfo.phonenumber + seperator;
+	word += to_string(clientinfo.accountbalance);
+	return word;
+}
+vector <string> splitstring(string x, string seperator)
+{
+	vector <string >cx;
+	string sword = "";
+	short pos = 0;
+	while (x.find(seperator) != std::string::npos)
+	{
+		pos = x.find(seperator);
+		sword = x.substr(0, pos);
+		if (sword != " ")
+			cx.push_back(sword);
+		if (sword != " ")
+			x.erase(0, pos + seperator.length());
+	}
+	if (x != "")
+		cx.push_back(x);
+	return cx;
+}
+/*stclientinfo changelinetorecord(string line, string seperator = "//")
+{
+	stclientinfo clientinfo;
+	clientinfo.accountnumber = line.substr(0, line.find(seperator) );
+	line.erase(0, line.find(seperator) + seperator.length());
+	clientinfo.pincode = line.substr(0, line.find(seperator));
+	line.erase(0, line.find(seperator) + seperator.length());
+	clientinfo.name = line.substr(0, line.find(seperator));
+	line.erase(0, line.find(seperator) + seperator.length());
+	clientinfo.phonenumber = line.substr(0, line.find(seperator));
+	line.erase(0, line.find(seperator) + seperator.length());
+	clientinfo.accountbalance = stod(line.substr(0, line.find(seperator)));
+	line.erase(0, line.find(seperator) + seperator.length());
+	return clientinfo;
+}*/
+stclientinfo changelinetorecord(string line, string seperator = "//")
+{
+	stclientinfo clientinfo;
+	vector <string > vec = splitstring(line, seperator);
+
+	if (vec.size() < 5) {
+		clientinfo.accountnumber = "";
+		clientinfo.pincode = "";
+		clientinfo.name = "";
+		clientinfo.phonenumber = "";
+		clientinfo.accountbalance = 0.0;
+		return clientinfo;
+	}
+
+	clientinfo.accountnumber = vec[0];
+	clientinfo.pincode = vec[1];
+	clientinfo.name = vec[2];
+	clientinfo.phonenumber = vec[3];
+	clientinfo.accountbalance = stod(vec[4]);
+
+	return clientinfo;
+}
+
+void printrecord(stclientinfo clientinfo)
+{
+	cout << "the following is the client details \n\n";
+	cout << "_______________________________________\n\n";
+	cout << "account number  " << ": " << clientinfo.accountnumber << endl;
+	cout << "pin code        " << ": " << clientinfo.pincode << endl;
+	cout << "name            " << ": " << clientinfo.name << endl;
+	cout << "phone           " << ": " << clientinfo.phonenumber << endl;
+	printf("account balance : %.5f\n", clientinfo.accountbalance);
+	cout << "\n_______________________________________\n\n";
+
+
+
+}
+void addclienttofile(string filename, string  line)
+{
+	fstream myfile;
+	myfile.open(filename, ios::out | ios::app);
+	if (myfile.is_open())
+	{
+		myfile << line << endl;
+	}
+
+}
+void addnewclient()
+{
+	stclientinfo clientinfo;
+	clientinfo = readdataofclient();
+
+	addclienttofile("clientdata.txt", changeinfotoline(clientinfo, "#//#"));
+
+
+}
+void addnewclients()
+
+{
+	char ans = 'y';
+	do
+	{
+
+		cout << "add new client \n\n";
+		addnewclient();
+		cout << "\n\nadded successfully ,do you want to add more ";
+		cin >> ans;
+
+	} while (ans == 'y' || ans == 'Y');
+
+
+}
+vector <stclientinfo>datainfiletovector(string filename)
+{
+	vector <stclientinfo> vec;
+	fstream myfile;
+	stclientinfo clientinfo;
+	myfile.open(filename, ios::in);
+	if (myfile.is_open())
+	{
+		string line;
+		while (getline(myfile, line))
+		{
+			clientinfo = changelinetorecord(line, "#//#");
+			vec.push_back(clientinfo);
+
+		}
+		myfile.close();
+	}
+	return vec;
+}
+void head(vector <stclientinfo > c)
+{
+	cout << "                                  client list (" << c.size() << ") cilent(s)\n";
+	cout << "_________________________________________________________________________________________________\n\n";
+	cout << "| Account Number      | pin code       | client name                     | phone          | balance \n";
+	cout << "_________________________________________________________________________________________________\n\n";
+}
+void printclientdatafrostruc(stclientinfo clientinfo)
+{
+	cout << "| " << left << setw(20) << clientinfo.accountnumber;
+	cout << "| " << left << setw(15) << clientinfo.pincode << "| ";
+	cout << left << setw(32) << clientinfo.name << "| ";
+	cout << left << setw(15) << clientinfo.phonenumber << "| ";
+	cout << left << setw(7) << clientinfo.accountbalance;
+	cout << endl;
+}
+void printdata(vector<stclientinfo> data)
+{
+
+	for (stclientinfo& c : data)
+	{
+		printclientdatafrostruc(c);
+
+	}
+}
+void printclientdata()
+{
+	vector <stclientinfo> data;
+	data = datainfiletovector("clientdata.txt");
+	head(data);
+	printdata(data);
+
+
+
+}
+bool printclientdatafromaccountnum(string filename, string accountnumber, stclientinfo& clientinfoo)
+{
+	vector <stclientinfo> vec;
+	vec = datainfiletovector(filename);
+	stclientinfo clientinfo;
+	for (stclientinfo& c : vec)
+	{
+
+		if (c.accountnumber == accountnumber)
+		{
+			clientinfoo = c;
+			return 1;
+		}
+
+
+
+
+	}
+
+	return 0;
+
+}
+string getaccountnumber()
+{
+	string x;
+	cout << "pleasse enter account number \n";
+	cin >> x;
+	return x;
+}
+void searchaboutclient(string filename)
+{
+	string accountnumber = getaccountnumber();
+	stclientinfo clientinfo;
+	if (printclientdatafromaccountnum(filename, accountnumber, clientinfo))
+	{
+		printrecord(clientinfo);
+	}
+	else
+	{
+		cout << "the account number (" << accountnumber << ")didn,t found \n";
+	}
+
+}
+
+char ans()
+{
+	cout << "do you want to delete the account (yes)y or no (n)\n";
+	char x;
+	cin >> x;
+	return tolower(x);
+}
+bool marktodelete(string accountnumber, vector <stclientinfo>& vclient)
+{
+	for (stclientinfo& c : vclient)
+	{
+		if (c.accountnumber == accountnumber)
+		{
+			c.todelete = true;
+			return 1;
+		}
+	}
+	return 0;
+}
+void putvecinfiletodelete(string filename, vector <stclientinfo>vclient)
+{
+	fstream myfile;
+	myfile.open(filename, ios::out);
+	if (myfile.is_open())
+	{
+		for (stclientinfo& c : vclient)
+		{
+			if (c.todelete == false)
+				myfile << changeinfotoline(c, "#//#") << endl;
+		}
+		myfile.close();
+	}
+
+}
+void deleteaccount(string accountnumber, vector <stclientinfo>& vclient)
+{
+
+	stclientinfo clientinfo;
+	if (printclientdatafromaccountnum(filename, accountnumber, clientinfo))
+	{
+		printrecord(clientinfo);
+		if (ans() == 'y')
+		{
+			marktodelete(accountnumber, vclient);
+			putvecinfiletodelete(filename, vclient);
+			vclient = datainfiletovector(filename);
+
+		}
+
+	}
+	else
+	{
+		cout << "the account number (" << accountnumber << ")didn,t found \n";
+	}
+
+}
+bool marktheaccounttoedit(string accountnumber, vector <stclientinfo>& v)
+{
+	for (stclientinfo& c : v)
+	{
+		if (c.accountnumber == accountnumber)
+		{
+			c.edit = true;
+			return 1;
+		}
+	}
+	return 0;
+}
+
+
+stclientinfo getnewdata(string accountnumber)
+{
+	stclientinfo clientinfo;
+	clientinfo.accountnumber = accountnumber;
+	cout << "please enter client data :\n\n";
+
+	cout << "enter pin code ?";
+	getline(cin >> ws, clientinfo.pincode);
+	cout << "enter name ?";
+	getline(cin, clientinfo.name);
+	cout << "enter phone ?";
+	getline(cin, clientinfo.phonenumber);
+	cout << "enter account balance ?";
+	cin >> clientinfo.accountbalance;
+	return clientinfo;
+
+}
+
+void editaccount(string accountnumber, vector <stclientinfo>& vclient)
+{
+	stclientinfo clientinfo;
+
+	if (printclientdatafromaccountnum(filename, accountnumber, clientinfo))
+	{
+		printrecord(clientinfo);
+		cout << "do you want to edit the account (yes)y or no (n)\n";
+		char x;
+		cin >> x;
+		if (x == 'y' || x == 'Y')
+
+		{
+			for (stclientinfo& c : vclient)
+			{
+				if (c.accountnumber == accountnumber)
+				{
+					c = getnewdata(accountnumber);
+					break;
+				}
+			}
+
+			putvecinfiletodelete(filename, vclient);
+			cout << "\n\nthe account edited suuccessfully \n";
+		}
+	}
+	else
+	{
+		cout << "the account number (" << accountnumber << ")didn,t found \n";
+	}
+}
+string readstring(string x)
+{
+	cout << x << endl;
+	string name;
+	getline(cin >> ws, name);
+	return name;
+
+}
+
+bool deposos(string accountnumber, vector <stclientinfo >& vclient)
+{
+	int x;
+	do {
+
+		cout << "please enter doposit amount ?   ";
+		cin >> x;
+	} while (x < 0);
+
+	for (stclientinfo& c : vclient)
+		if (c.accountnumber == accountnumber)
+		{
+			c.accountbalance += x;
+			return 1;
+		}
+
+	return 0;
+}
+void deposits()
+{
+	vector <stclientinfo > vclient;
+	vclient = datainfiletovector(filename);
+	stclientinfo clientinfo;
+	string accountnumber = readstring("enter the account number ? ");
+	if (printclientdatafromaccountnum(filename, accountnumber, clientinfo))
+	{
+		printrecord(clientinfo);
+		deposos(accountnumber, vclient);
+		putvecinfiletodelete(filename, vclient);
+		cout << "\n\nthe amount added successfully  ";
+	}
+	else
+	{
+		cout << "the account number (" << accountnumber << ")didn,t found \n";
+
+	}
+}
+bool with(string accountnumber, vector <stclientinfo >& vclient)
+{
+	int x;
+	cout << "please enter withdraw amount ?  ";
+	cin >> x;
+
+	for (stclientinfo& c : vclient)
+		if (c.accountnumber == accountnumber)
+		{
+			while (x > c.accountbalance)
+			{
+				cout << "Amount excceds the balance , you can withdraw up to : " << c.accountbalance << endl;
+				cout << "please enter another amount ?  ";
+				cin >> x;
+			}
+			c.accountbalance = c.accountbalance - x;
+			return 1;
+		}
+	return 0;
+}
+void withdraws()
+{
+	vector <stclientinfo > vclient;
+	vclient = datainfiletovector(filename);
+	stclientinfo clientinfo;
+	string accountnumber = readstring("enter the account number ? ");
+	if (printclientdatafromaccountnum(filename, accountnumber, clientinfo))
+	{
+		printrecord(clientinfo);
+		with(accountnumber, vclient);
+		putvecinfiletodelete(filename, vclient);
+		cout << "\n\nthe amount added successfully  ";
+
+	}
+	else
+	{
+		cout << "the account number (" << accountnumber << ")didn,t found \n";
+
+	}
+}
+void headofbalintrans(vector <stclientinfo> vclient)
+{
+	cout << "                                  client list (" << vclient.size() << ") cilent(s)\n";
+	cout << "_________________________________________________________________________________________________\n\n";
+	cout << " | " << left << setw(15) << "Account Number" << "| " << left << setw(45) << "Client Name" << "| " << "Balance\n\n";
+	cout << "_________________________________________________________________________________________________\n\n";
+}
+void totalbalances()
+{
+	vector <stclientinfo > vclient;
+	vclient = datainfiletovector(filename);
+	int sum = 0;
+	headofbalintrans(vclient);
+	for (stclientinfo& c : vclient)
+	{
+		cout << " | " << left << setw(15) << c.accountnumber;
+		cout << "| " << left << setw(45) << c.name;
+		cout << "| " << c.accountbalance << endl;
+		sum += c.accountbalance;
+	}
+	cout << "\n\n_________________________________________________________________________________________________\n\n";
+	cout << "\t\t\t\t\t\t Total Balances = " << sum << endl << endl;
+}
+
+void headoftaple(string title)
+{
+	cout << "________________________________________________\n";
+	cout << "________________________________________________\n\n";
+	cout << "              " << title << "\n";
+	cout << "________________________________________________\n";
+	cout << "________________________________________________\n\n";
+}
+void homescreenofmange()
+{
+	headoftaple("Mange users Menu Screen "); 
+	cout << "\n\t[1] List Users. ";
+	cout << "\n\t[2] Add New User. ";
+	cout << "\n\t[3] Delete User. ";
+	cout << "\n\t[4] Update User. ";
+	cout << "\n\t[5] Find User. ";
+	cout << "\n\t[6] Main menu. \n";
+	cout << "________________________________________________\n";
+	cout << "________________________________________________\n";
+
+
+}
+void headofuserlist(vector <stuser> x)
+{
+
+	cout << "\t\t\t\t\t\tusers list ("<<x.size()<<") user(s). \n";
+	cout << "_________________________________________________________________________________________________\n\n";
+	cout << " | " << left << setw(20) << "user name ";
+	cout << " | " << left << setw(15) << "password"; 
+	cout << " | " << "permissions \n\n";
+	cout << "_________________________________________________________________________________________________\n\n";
+	                                     
+}
+void userlist(vector <stuser>x)
+{
+	headofuserlist(x); 
+	for (stuser& c : x)
+	{
+
+		cout << " | " << left << setw(20) << c.name;
+		cout << " | " << left << setw(15) << c.password;
+		cout << " | " << c.permission << endl;
+
+	}
+}
+stuser changelinetovectoruser(string x)
+{
+	vector <string>temp; 
+	stuser user; 
+	temp = splitstring(x, "#//#");
+	if (temp.size() < 3)
+	{
+		temp.push_back(""); 
+		temp.push_back("");
+		temp.push_back("0");
+
+	}
+	user.name = temp[0]; 
+	user.password = temp[1]; 
+	user.permission = stoi(temp[2]);
+	return user; 
+
+}
+vector <stuser> dateinfiletovectoruser()
+{
+	fstream  myfile;
+	vector <stuser >l;
+	stuser user; 
+	myfile.open(userfile, ios::in);
+	if (myfile.is_open())
+	{
+		string x; 
+		while (getline(myfile, x))
+		{
+			user =  changelinetovectoruser(x);
+			l .push_back(user);
+		}
+		myfile.close(); 
+	}
+	return l; 
+}
+bool isitreppitinfile(string name)
+{
+	vector <stuser>file; 
+	file = dateinfiletovectoruser();
+	for (stuser& c : file)
+	{
+		if (c.name == name)
+			return true; 
+	}
+	return false;
+}
+string changeusertoline(stuser user, string seprator)
+{
+	string word= "";
+	word += user.name + seprator; 
+	word += user.password + seprator; 
+	word += to_string(user.permission); 
+	return word; 
+}
+bool checkisitreppitandmark(string name,stuser &user )
+{
+	vector <stuser>file;
+	file = dateinfiletovectoruser();
+	for (stuser& c : file)
+	{
+		if (c.name == name)
+		{
+			user = c;
+			return true;
+		}
+	}
+	return false;
+}
+
+void adduserinfile(stuser user)
+{
+	fstream myfile; 
+	myfile.open(userfile, ios::out | ios::app); 
+	if (myfile.is_open())
+	{
+		myfile << changeusertoline(user, "#//#")<<endl;
+
+	}
+}
+int access()
+{
+	short x = 0; 
+	char ch = 'n'; 
+	cout << "\n\ndo you wantt to give full access? y/n "; 
+	cin >> ch; 
+	if (ch == 'y' || ch == 'Y')
+		return -1; 
+	cout << "\n\ndo you want to give access to :\n\n"; 
+	cout << "show client list ? "; 
+	cin >> ch; 
+	if (ch == 'y' || ch == 'Y')
+		x = x | showw; 
+	cout << "add new client ?";
+	cin >> ch;
+	if (ch == 'y' || ch == 'Y')
+		x = x | addd;
+	cout << "delete client ? ";
+	cin >> ch;
+	if (ch == 'y' || ch == 'Y')
+		x = x | deleteee;
+	cout << "upgrade client ? ";
+	cin >> ch;
+	if (ch == 'y' || ch == 'Y')
+		x = x | updradeee;
+	cout << "find client ? ";
+	cin >> ch;
+	if (ch == 'y' || ch == 'Y')
+		x = x | findd;
+    cout << "Transactions ? ";
+	cin >> ch;
+	if (ch == 'y' || ch == 'Y')
+		x = x | transac;
+	cout << "mange user ? ";
+	cin >> ch;
+	if (ch == 'y' || ch == 'Y')
+		x = x | mangee;
+	return x;
+
+}
+void addnewuser()
+{
+	string name;
+	stuser user; 
+	cout << "enter user name? ";
+	getline(cin >> ws, name);
+	while (isitreppitinfile(name))
+	{
+		cout << "user with [" << name << "] alredy exists , Enter another username? ";
+		cin >> name; 
+
+	}
+	user.name = name;
+	cout << "enter Password ? "; 
+	
+	getline(cin>>ws, user.password); 
+	user.permission = access(); 
+    adduserinfile(user); 
+
+
+}
+void headofmangeuserssec(string x)
+{
+	cout << "\n----------------------------------\n\n"; 
+	cout << "         " << x; 
+	cout << "\n\n----------------------------------\n\n";
+}
+void addusers()
+{
+	char c = 'n'; 
+	
+	
+		system("cls");
+		addnewuser();
+		cout << "\n\nuser added successfully do you want add more users ? y/n";
+		cin >> c;
+while (c == 'y' || c == 'Y')
+{
+	cout << "Adding new user:\n\n"; 
+	addnewuser(); 
+	cout << "\n\nuser added successfully do you want add more users ? y/n";
+	cin >> c;
+}
+
+	
+
+	}
+
+void userrecord(stuser user)
+{
+	cout << "the following is the user details \n\n";
+	cout << "-----------------------------------\n";
+	cout << "user name   : " << user.name << endl; 
+	cout << "password    : " << user.password << endl; 
+	cout << "permission  : " << user.permission << endl;
+	cout << "-----------------------------------\n\n";
+}
+bool markusertodelete(vector<stuser> &x,string name)
+{
+	for (stuser& c : x)
+	{
+		if (c.name == name)
+			c.deletee = true; 
+	}
+	return false; 
+}
+bool asktodelete()
+{
+	char ch='n';
+	cout << "are you sure you want to delete this user y/n ?  "; 
+	cin >> ch; 
+	return ch == 'y' || ch == 'Y';
+}
+void putdataofuserinfiletodelete(vector <stuser > x)
+{
+	fstream myfile;
+	string l; 
+	myfile.open(userfile, ios::out);
+	if (myfile.is_open())
+	{
+		for (stuser& c : x)
+		{
+			if (c.deletee==false)
+			{
+				l = changeusertoline(c, "#//#");
+				myfile << l << endl;
+			}
+		}
+	}
+}
+void deleteuserr()
+{
+	string x;
+	vector <stuser> file;
+	stuser user; 
+	file = dateinfiletovectoruser(); 
+	headofmangeuserssec("delete users screen "); 
+	cout << "please enter username ? ";
+	getline(cin >> ws, x); 
+	if (x == "admin")
+	{
+		cout << "\n\nyou cannot delete this user. "; 
+	}
+	else
+	{
+		if (checkisitreppitandmark(x, user))
+		{
+			userrecord(user);
+			cout << "\n\n\n\n";
+
+			if (asktodelete())
+			{
+				markusertodelete(file, x);
+				putdataofuserinfiletodelete(file);
+				file = dateinfiletovectoruser();
+				cout << "\n\nuser deleted successfully \n";
+
+			}
+		}
+		else
+		{
+			cout << "user [" << x << "] didn,t found ";
+
+		}
+	}
+}
+bool asktoupdate()
+{
+	char ch = 'n';
+	cout << "are you sure you want to update this user y/n ?  ";
+	cin >> ch;
+	return ch == 'y' || ch == 'Y';
+}
+
+stuser getnewdatafromuser(stuser user)
+{
+	stuser user1; 
+	user1.name = user.name; 
+	cout << "enter Password ?";
+	cin.ignore(1, '\n');
+	getline(cin, user1.password);
+	if (user.name == "admin")
+		user1.permission = -1; 
+	else
+	{
+		user1.permission = access();
+	}
+	
+	return user1;
+}
+bool  updateinvector(stuser user, vector <stuser > &x)
+{
+	for (stuser & c : x)
+	{
+		if (c.name == user.name)
+		{
+			c = user; 
+			return 1  ;
+		}
+	}
+	return 0; 
+}
+void updateuserr()
+{
+	headofmangeuserssec("update user screen "); 
+	cout << "please enter username ? ";
+	string x;
+	getline(cin >> ws, x);
+	stuser user ;
+	vector <stuser> datainfile; 
+	datainfile = dateinfiletovectoruser(); 
+	if (checkisitreppitandmark(x, user))
+	{
+		userrecord(user);
+		cout << "\n\n\n\n";
+		if (asktoupdate ())
+		{
+			user = getnewdatafromuser(user); 
+			updateinvector(user, datainfile); 
+			putdataofuserinfiletodelete(datainfile); 
+			cout << "\n\nuser updated successfully successfully \n";
+		}
+	}
+	else
+	{
+		cout << "user [" << x << "] didn,t found ";
+	}
+	
+}
+void findusers()
+{
+	headofmangeuserssec("Find user Screen ");
+	cout << "please enter username ? ";
+	string x;
+	getline(cin >> ws, x);
+	cout << endl << endl; 
+	stuser user;
+
+	if (checkisitreppitandmark(x, user))
+	{
+		userrecord(user); 
+	}
+	else
+	{
+		cout << "user [" << x << "] didn,t found ";
+	}
+}
+enmange readmangeans()
+{
+	short x;
+	do
+	{
+
+		cout << "\nchose what do you want to do [ 1 to 6 ]? ";
+		cin >> x;
+	} while (x < 1 || x>6);
+	return (enmange)x;
+}
+void addadmindirectly()
+{
+	vector<stuser> x; 
+	stuser user; 
+	x = dateinfiletovectoruser(); 
+	if (!isitreppitinfile("admin"))
+	{
+		user.name = "admin";
+		user.password = "1234"; 
+		user.permission = -1; 
+		adduserinfile(user); 
+	}
+}
+void connectfunctionofuser(enmange mange)
+{
+	vector <stuser  >x;
+	x = dateinfiletovectoruser();
+	switch (mange)
+	{
+	case enmange::list:
+	{
+		system("cls");
+		userlist(x);
+		cout << "\n\npress any key to back to mange user menu... ";
+		system("pause >0 ");
+		break;
+	}
+	case enmange::adduser:
+	{
+		system("cls");
+		addusers();
+		cout << "\n\npress any key to back to mange user menu... ";
+		system("pause >0 ");
+		break; 
+	}
+	case enmange::deleteuser:
+	{
+		system("cls");
+		deleteuserr();
+		cout << "\n\npress any key to back to mange user menu... ";
+		system("pause >0 ");
+		break;
+
+
+	}
+	case enmange::updateuser:
+	{
+		system("cls");
+		updateuserr();
+		cout << "\n\npress any key to back to mange user menu... ";
+		system("pause >0 ");
+		break;
+
+	}
+	case enmange::finduser:
+	{
+		system("cls");
+		findusers();
+		cout << "\n\npress any key to back to mange user menu... ";
+		system("pause >0 ");
+		break;
+	}
+	}
+	
+}
+void mangeuser()
+{
+	
+	enmange  mange; 
+	do
+	{
+		system("cls"); 
+		homescreenofmange();
+		mange = readmangeans(); 
+		connectfunctionofuser(mange);
+		
+
+	} while (mange != enmange::mainn);
+	}
+bool checkuserpermission(stuser user, int num)
+{
+	return (user.permission & num) == num; 
+
+}
+
+void homescreenoftran()
+{
+	headoftaple("Transaction Menu Screen ");
+	cout << '\t' << "[ 1 ] Deposit. \n";
+	cout << '\t' << "[ 2 ] Withdraw.  \n";
+	cout << '\t' << "[ 3 ] Total Balances. \n";
+	cout << '\t' << "[ 4 ] Main Menu. \n";
+}
+entrans answeroftrans()
+{
+	short x;
+	do {
+		cout << "Choose what do you want to do [ 1 to 4 ]?";
+
+		cin >> x;
+		while (cin.fail())
+		{
+			cin.clear();
+			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			cout << "invalid number please enter a valid one \n";
+			cin >> x;
+		}
+	} while (x < 1 || x>4);
+	return (entrans)x;
+}
+void makethefunctionoftrans(entrans trans)
+{
+	switch (trans)
+	{
+	case entrans::deposit:
+	{
+		system("cls");
+		headoftaple("Deposit Screen");
+		deposits();
+		system("pause>0");
+		break;
+	}
+	case entrans::withdraw:
+	{
+		system("cls");
+		headoftaple("Withdraw Screen");
+		withdraws();
+		system("pause>0");
+		break;
+	}
+	case entrans::totalbalance:
+	{
+		system("cls");
+		totalbalances();
+		system("pause>0");
+		break;
+	}
+	}
+}
+void ttrans()
+{
+	entrans trans;
+
+	do
+	{
+		system("cls");
+		homescreenoftran();
+		trans = answeroftrans();
+		makethefunctionoftrans(trans);
+		cout << "\n\n if you want to go back to home screen press on any key ";
+
+	} while (trans != entrans::manin);
+}
+void loginhead()
+{
+	cout << endl;
+	cout << "-----------------------------------\n\n";
+	cout << "           login screen \n\n"; 
+	cout << "-----------------------------------\n\n";
+
+}
+void deniedmessage()
+{
+	cout << endl << endl;
+	cout << "-----------------------------------\n\n";
+	cout << "Access Denied,"; 
+	cout << "\nYou don,t Have Permission To Do This, "; 
+	cout << "\nPlease Contact Your Admin.\n\n"; 
+	cout << "-----------------------------------\n\n";
+}
+void homescreen()
+{
+	cout << '\t' << "[ 1 ] Show Client List. \n";
+	cout << '\t' << "[ 2 ] Add New Client.  \n";
+	cout << '\t' << "[ 3 ] Delete Client . \n";
+	cout << '\t' << "[ 4 ] Update Client Info. \n";
+	cout << '\t' << "[ 5 ] Find Client. \n";
+	cout << '\t' << "[ 6 ] Transaction. \n";
+	cout << '\t' << "[ 7 ] Mange Users. \n";
+	cout << '\t' << "[ 8 ] Logout. \n";
+	cout << "________________________________________________\n";
+	cout << "________________________________________________\n\n";
+
+
+
+
+
+}
+enchoce answerofuser()
+{
+	short x;
+	do {
+		cout << "Choose what do you want to do [ 1 to 8 ]?";
+
+		cin >> x;
+		while (cin.fail())
+		{
+			cin.clear();
+			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			cout << "invalid number please enter a valid one \n";
+			cin >> x;
+		}
+	} while (x < 1 || x>8);
+	return (enchoce)x;
+}
+void makethefunctionofuser(enchoce choce,stuser user )
+{
+	vector <stclientinfo>vclient;
+	vclient = datainfiletovector(filename);
+
+	switch (choce)
+	{
+	case enchoce::show:
+		system("cls");
+		if (checkuserpermission(user, showw))
+		{
+			headoftaple("Show data of client screen");
+			printclientdata();
+		}
+		else
+		{
+			deniedmessage(); 
+		}
+		cout << "\n\npress any key to back to mange user menu... ";
+		system("pause>0");
+		break;
+	case enchoce::add:
+		system("cls");
+		if (checkuserpermission(user, addd))
+		{
+			headoftaple("Add new client screen");
+			addnewclients();
+		}
+		else
+		{
+			deniedmessage();
+		}
+		cout << "\n\npress any key to back to mange user menu... ";
+		system("pause>0");
+		break;
+	case enchoce::deletee:
+		system("cls");
+		if (checkuserpermission(user, deleteee))
+		{headoftaple("delete client screen");
+		deleteaccount(readstring("Enter the account number ?"), vclient);
+		}
+		else
+		{
+			deniedmessage();
+		}
+		cout << "\n\npress any key to back to mange user menu... ";
+		system("pause>0");
+		break;
+	case enchoce::update:
+		system("cls");
+		if (checkuserpermission(user, updradeee))
+		{headoftaple("Update client screen");
+		editaccount(readstring("Enter the account number ?"), vclient);
+		}
+		else
+		{
+			deniedmessage();
+		}
+		cout << "\n\npress any key to back to mange user menu... ";
+		system("pause>0");
+		break;
+	case enchoce::find:
+		system("cls");
+		if (checkuserpermission(user, findd))
+		{headoftaple("search screen");
+		searchaboutclient("clientdata.txt");
+		}
+		else
+		{
+			deniedmessage();
+		}
+		cout << "\n\npress any key to back to mange user menu... ";
+		system("pause>0");
+		break;
+	case enchoce::trans:
+	{
+		system("cls");
+		if (checkuserpermission(user, transac))
+		{
+			ttrans();
+		}
+		else
+		{
+			deniedmessage();
+			 
+			cout << "\n\npress any key to back to mange user menu... ";
+system("pause>0");
+		}
+		
+		break;
+	}
+	case enchoce::mange:
+		system("cls"); 
+		if (checkuserpermission(user, mangee))
+		{
+			mangeuser();
+		}
+		else
+		{
+			deniedmessage();
+			cout << "\n\npress any key to back to mange user menu... ";
+			system("pause>0");
+		}
+
+		break; 
+	case enchoce::logout:
+		system("cls");
+		cout << "\n\n\n\n\n\n\n\n\n\n\n";
+		
+	}
+}
+void bank(stuser user ) {
+	enchoce chose;
+	do
+	{
+		system("cls");
+		headoftaple("Main Menu Screen ");
+		homescreen();
+		chose = answerofuser();
+
+		makethefunctionofuser(chose,user);
+		cout << "\n\n if you want to go back to home screen press on any key ";
+
+	} while (chose != enchoce::logout);
+
+
+
+}
+bool isvaliduser(string name, string password, stuser &user)
+{
+	vector <stuser > datainfile; 
+	datainfile = dateinfiletovectoruser(); 
+	for (stuser& c : datainfile)
+	{
+		if (c.name == name && c.password == password)
+		{
+			user = c; 
+			return true; 
+
+		}
+	}
+	return false; 
+}
+void login()      
+{
+	addadmindirectly();
+	string name , password ; 
+	stuser user; 
+	bool isvalid = false; 
+	while (true)
+	{
+		system("cls");
+		loginhead();
+		if (isvalid)
+		{
+			cout << "invalid username/password!\n";
+		}
+		cout << "enter user name ? "; 
+		getline(cin >> ws, name); 
+		cout << "enter password ? ";
+		getline(cin >> ws, password);
+		if (isvaliduser(name, password, user))
+		{
+			isvalid = false; 
+			bank(user);
+			
+		}
+		else
+		{
+			isvalid = true; 
+		}
+		
+	}
+}
+int  main()
+{
+
+	login();
+	return 0;
+}
+ 
