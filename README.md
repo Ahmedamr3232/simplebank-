@@ -1,79 +1,107 @@
-🏦 Simple Bank Management System (C++)
+🏦 C++ Banking Management System
+This is a full-featured Banking Management System written in C++ with file-based storage. It supports multi-user login, role-based permissions, and banking operations like managing clients, transactions, and system users.
 
-This project is a **console-based bank management system** built in C++. It allows users to manage bank clients, including functionalities like adding, deleting, editing, and searching for client records stored in a text file.
+📂 Features
+👤 Client Management
+Add new clients
 
----
+View client list
 
-## 📚 Features
+Find a client by account number
 
-- View all bank clients  
-- Add new clients  
-- Search clients by account number  
-- Update client information  
-- Delete client records  
-- Handle deposits, withdrawals, and view total balances  
-- Data persistence through `clientdata.txt`  
+Edit client information
 
----
+Delete client accounts (soft-delete)
 
-## 🧰 Tech Stack
+💸 Transactions
+Deposit money
 
-- Language: C++  
-- File I/O: Standard Library (`<fstream>`)  
-- Data Storage: Plain text file (`clientdata.txt`)  
-- IDE: Any C++ compatible (Visual Studio, Code::Blocks, VS Code, etc.)
+Withdraw money with validation
 
----
+View total balances of all clients
 
-## 🏁 Getting Started
+👮 User Management (Admin Panel)
+Add new users with permission control
 
-### 1. Clone the Repository
+List users
 
-```bash
-git clone https://github.com/your-username/your-repo-name.git
-cd your-repo-name
-2. Build the Project
-Compile the code using any standard C++ compiler:
+Update users
 
+Delete users (except for "admin")
+
+Find users
+
+Admin has full access by default
+
+🔐 Authentication System
+Login screen
+
+User credential validation
+
+Permissions system using bitwise flags
+
+🗂️ File Structure
+File	Purpose
+main.cpp	Main logic for login and launching the application
+clientdata.txt	Stores client account information
+usersdata.txt	Stores user credentials and permissions
+
+🛡️ Permissions
+Permissions are stored as bitwise flags:
+
+Permission	Flag Value
+Show Clients	1
+Add Clients	2
+Delete Clients	4
+Edit Clients	8
+Find Clients	16
+Transactions	32
+Manage Users	64
+
+Admin user has permission value -1, which means full access.
+
+🛠️ How It Works
+1. Startup
+Initializes the admin account (admin / 1234) if it doesn't exist.
+
+Starts the login screen.
+
+2. After Login
+Loads the main menu based on user permissions.
+
+User can perform actions like add/search/edit/delete clients or users depending on access.
+
+3. File Handling
+Client/user data is stored and retrieved from .txt files.
+
+Vectors are used to manipulate data in memory before writing back to files.
+
+💻 Compilation & Running
+🔧 Requirements
+C++17 compatible compiler (e.g., g++, MSVC)
+
+Console/terminal
+
+🧪 Compile & Run (Linux/Mac)
 bash
-Copy
-Edit
-g++ -o BankSystem main.cpp
-3. Run the Program
-bash
-Copy
-Edit
-./BankSystem
-📝 Data Format
-Each client record is stored as a line in the file using the following format:
+نسخ
+تحرير
+g++ -o bank main.cpp
+./bank
+🧪 Compile & Run (Windows, CMD)
+cmd
+نسخ
+تحرير
+g++ -o bank.exe main.cpp
+bank.exe
+📌 Notes
+Ensure clientdata.txt and usersdata.txt exist in the same directory as the executable or they will be created automatically.
 
-swift
-Copy
-Edit
-accountNumber#//#pinCode#//#name#//#phoneNumber#//#balance
-Example:
+Admin is the only user that cannot be deleted.
 
-swift
-Copy
-Edit
-123456#//#0000#//#John Doe#//#1234567890#//#2500.75
-👥 Sample Menu (User Interface)
-pgsql
-Copy
-Edit
-[ 1 ] Show Client List
-[ 2 ] Add New Client
-[ 3 ] Delete Client
-[ 4 ] Update Client Info
-[ 5 ] Find Client
-[ 6 ] Transaction
-[ 7 ] Exit
-Within Transactions:
+system("cls") and system("pause") are used — consider replacing them if you are using another OS.
 
-css
-Copy
-Edit
-[ 1 ] Deposit
-[ 2 ] Withdraw
-[ 3 ] Total Balances
-[ 4 ] Main Menu
+📷 Sample User Credentials
+Username	Password	Permissions
+admin	1234	Full access
+
